@@ -1,0 +1,26 @@
+{
+  "bindings": [
+    {
+      "authLevel": "anonymous",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "methods": ["get", "post"]
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "res"
+    },
+    {
+      "type": "cosmosDB",
+      "direction": "in",
+      "name": "retreiveContractData",
+      "databaseName": "power-finance-asess",
+      "collectionName": "contracts",
+      "connectionStringSetting": "tairestapi_DOCUMENTDB",
+      "sqlQuery": "SELECT c.id AS contractID, c.contractAmount, c.interestRate, c.borrower, c.investor from c"
+    }
+  ],
+  "scriptFile": "../dist/HttpTriggerGetContracts/index.js"
+}
