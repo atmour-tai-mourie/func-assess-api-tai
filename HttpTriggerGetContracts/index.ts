@@ -1,23 +1,15 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions';
 import { CosmosClientInstance } from '../common/cosmosClient';
-
-interface Contract {
-  contractID: string;
-  contractAmount: number;
-  interestRate: number;
-  borrower: string;
-  investor: string;
-}
+import { Contracts } from '../common/datasources/contracts';
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ): Promise<void> {
-  const cosmosClient = CosmosClientInstance.getCosmosClientInstance();
-  const container = cosmosClient.database('spa-app').container('contracts');
+  const contractsDatasource = new Contracts();
 
   try {
-    const { resources: data } = await container.items.readAll().fetchAll();
+    const data = await contractsDatasource.fetchAll();
 
     context.res = {
       body: {

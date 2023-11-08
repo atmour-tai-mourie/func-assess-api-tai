@@ -1,6 +1,7 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions';
 import { CosmosClientInstance } from '../common/cosmosClient';
 import { v4 as uuidv4 } from 'uuid';
+import { Contracts } from '../common/datasources/contracts';
 
 interface ContractInputData {
   contractAmount: number;
@@ -19,7 +20,6 @@ const httpTrigger: AzureFunction = async function (
     borrower,
     investor,
   }: ContractInputData = req.body;
-  console.log(req.body);
 
   const validContractAmount =
     typeof contractAmount === 'number' && contractAmount > 0;
@@ -28,18 +28,16 @@ const httpTrigger: AzureFunction = async function (
     typeof interestRate === 'number' && interestRate > 0;
 
   if (validContractAmount && validInterestRates && borrower && investor) {
-    const cosmosClient = CosmosClientInstance.getCosmosClientInstance();
-    const container = cosmosClient.database('spa-app').container('contracts');
+    const contractsDatasource = new Contracts();
+
+    await contractsDatasource.createOne({
+      contractAmount,
+      interestRate,
+      borrower,
+      investor,
+    });
 
     try {
-      await container.items.create({
-        id: uuidv4(),
-        contractAmount,
-        interestRate,
-        borrower,
-        investor,
-      });
-
       context.res = {
         status: 201,
         headers: {
