@@ -12,7 +12,12 @@
   "devDependencies": {
     "@azure/functions": "^3.2.0",
     "@types/node": "16.x",
-    "azure-functions-core-tools": "^4.x",
+    "@types/uuid": "^9.0.6",
+    "azure-functions-core-tools": "^4.0.5441",
     "typescript": "^4.0.0"
+  },
+  "dependencies": {
+    "@azure/cosmos": "^4.0.0",
+    "uuid": "^9.0.1"
   }
 }

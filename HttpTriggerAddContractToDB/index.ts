@@ -1,4 +1,6 @@
-import { AzureFunction, Context, HttpRequest } from "@azure/functions";
+import { AzureFunction, Context, HttpRequest } from '@azure/functions';
+import { CosmosClientInstance } from '../common/cosmosClient';
+import { v4 as uuidv4 } from 'uuid';
 
 interface ContractInputData {
   contractAmount: number;
@@ -17,28 +19,50 @@ const httpTrigger: AzureFunction = async function (
     borrower,
     investor,
   }: ContractInputData = req.body;
+  console.log(req.body);
 
   const validContractAmount =
-    typeof contractAmount === "number" && contractAmount > 0;
+    typeof contractAmount === 'number' && contractAmount > 0;
 
   const validInterestRates =
-    typeof interestRate === "number" && interestRate > 0;
+    typeof interestRate === 'number' && interestRate > 0;
 
   if (validContractAmount && validInterestRates && borrower && investor) {
-    context.bindings.cosmosDbOutput = JSON.stringify({
-      contractAmount,
-      interestRate,
-      borrower,
-      investor,
-    });
-    context.res = {
-      status: 201,
-      body: "Contract created",
-    };
+    const cosmosClient = CosmosClientInstance.getCosmosClientInstance();
+    const container = cosmosClient.database('spa-app').container('contracts');
+
+    try {
+      await container.items.create({
+        id: uuidv4(),
+        contractAmount,
+        interestRate,
+        borrower,
+        investor,
+      });
+
+      context.res = {
+        status: 201,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
+    } catch (error) {
+      context.res = {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: 'Failed to add contract to database',
+      };
+    }
   } else {
+    // TODO: Fix this
     context.res = {
       status: 400,
-      body: "Please pass a valid contract in the request body",
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: 'Please pass a valid contract in the request body',
     };
   }
 };

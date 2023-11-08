@@ -1,4 +1,5 @@
-import { AzureFunction, Context, HttpRequest } from "@azure/functions";
+import { AzureFunction, Context, HttpRequest } from '@azure/functions';
+import { CosmosClientInstance } from '../common/cosmosClient';
 
 interface Contract {
   contractID: string;
@@ -12,11 +13,24 @@ const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ): Promise<void> {
-  const contractsData: Contract[] = context.bindings.retreiveContractData;
-  context.res = {
-    // status: 200, /* Defaults to 200 */
-    body: contractsData,
-  };
+  const cosmosClient = CosmosClientInstance.getCosmosClientInstance();
+  const container = cosmosClient.database('spa-app').container('contracts');
+
+  try {
+    const { resources: data } = await container.items.readAll().fetchAll();
+
+    context.res = {
+      body: {
+        data,
+      },
+    };
+  } catch (e) {
+    context.res = {
+      status: 400,
+      body: 'Failed to fetch contracts',
+    };
+    console.error('Failed to fetch contracts', e);
+  }
 };
 
 export default httpTrigger;
